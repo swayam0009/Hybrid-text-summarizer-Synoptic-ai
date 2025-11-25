@@ -19,7 +19,13 @@ class TextPreprocessor:
         nltk.download('averaged_perceptron_tagger', quiet=True)
         
         # Initialize tools
-        self.nlp = spacy.load(spacy_model)
+        try:
+            self.nlp = spacy.load(spacy_model)
+        except OSError:
+            print(f"Downloading {spacy_model}...")
+            from spacy.cli import download
+            download(spacy_model)
+            self.nlp = spacy.load(spacy_model)
         self.stop_words = set(stopwords.words('english'))
         self.stemmer = PorterStemmer()
         self.lemmatizer = WordNetLemmatizer()
