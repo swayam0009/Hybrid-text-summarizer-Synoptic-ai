@@ -22,13 +22,72 @@ class TextPreprocessor:
         try:
             self.nlp = spacy.load(spacy_model)
         except OSError:
-            print(f"Downloading {spacy_model}...")
-            from spacy.cli import download
-            download(spacy_model)
-            self.nlp = spacy.load(spacy_model)
+            print(f"Model {spacy_model} not found. Attempting local download...")
+            self.nlp = self._download_and_load_local_model(spacy_model)
+            
         self.stop_words = set(stopwords.words('english'))
         self.stemmer = PorterStemmer()
         self.lemmatizer = WordNetLemmatizer()
+        
+    def _download_and_load_local_model(self, model_name: str):
+        """Download and load spaCy model locally to avoid permission issues"""
+        import requests
+        import tarfile
+        import os
+        from pathlib import Path
+        
+        # Define cache directory
+        cache_dir = Path("cache/models")
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Map model names to URLs (using 3.7.1 as it's stable)
+        model_urls = {
+            "en_core_web_sm": "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz"
+        }
+        
+        url = model_urls.get(model_name)
+        if not url:
+            # Fallback to standard download if URL not known
+            print(f"URL for {model_name} not found, trying standard download...")
+            from spacy.cli import download
+            download(model_name)
+            return spacy.load(model_name)
+            
+        # Download file
+        tar_path = cache_dir / f"{model_name}.tar.gz"
+        if not tar_path.exists():
+            print(f"Downloading {model_name} from {url}...")
+            response = requests.get(url, stream=True)
+            if response.status_code == 200:
+                with open(tar_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            else:
+                raise OSError(f"Failed to download model: {response.status_code}")
+        
+        # Extract file
+        extract_path = cache_dir / model_name
+        if not extract_path.exists():
+            print(f"Extracting to {extract_path}...")
+            with tarfile.open(tar_path) as tar:
+                tar.extractall(path=cache_dir)
+        
+        # Find the actual model directory
+        # Structure is usually: en_core_web_sm-3.7.1/en_core_web_sm/en_core_web_sm-3.7.1
+        # We need to load the directory containing config.cfg
+        
+        # Search for config.cfg
+        model_path = None
+        for path in cache_dir.rglob("config.cfg"):
+            if model_name in str(path):
+                model_path = path.parent
+                break
+                
+        if model_path:
+            print(f"Loading model from {model_path}...")
+            return spacy.load(str(model_path))
+        else:
+            raise OSError(f"Could not find model data in {cache_dir}")
         
         # Contractions dictionary
         self.contractions = {
