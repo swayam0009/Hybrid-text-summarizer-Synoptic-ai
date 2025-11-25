@@ -29,6 +29,26 @@ class TextPreprocessor:
         self.stemmer = PorterStemmer()
         self.lemmatizer = WordNetLemmatizer()
         
+        # Contractions dictionary
+        self.contractions = {
+            "aren't": "are not", "can't": "cannot", "couldn't": "could not",
+            "didn't": "did not", "doesn't": "does not", "don't": "do not",
+            "hadn't": "had not", "hasn't": "has not", "haven't": "have not",
+            "he'd": "he would", "he'll": "he will", "he's": "he is",
+            "i'd": "i would", "i'll": "i will", "i'm": "i am",
+            "i've": "i have", "isn't": "is not", "it'd": "it would",
+            "it'll": "it will", "it's": "it is", "let's": "let us",
+            "shouldn't": "should not", "that's": "that is",
+            "there's": "there is", "they'd": "they would",
+            "they'll": "they will", "they're": "they are",
+            "they've": "they have", "we'd": "we would",
+            "we're": "we are", "we've": "we have", "weren't": "were not",
+            "what's": "what is", "where's": "where is",
+            "who's": "who is", "won't": "will not", "wouldn't": "would not",
+            "you'd": "you would", "you'll": "you will",
+            "you're": "you are", "you've": "you have"
+        }
+        
     def _download_and_load_local_model(self, model_name: str):
         """Download and load spaCy model locally to avoid permission issues"""
         import requests
@@ -89,25 +109,7 @@ class TextPreprocessor:
         else:
             raise OSError(f"Could not find model data in {cache_dir}")
         
-        # Contractions dictionary
-        self.contractions = {
-            "aren't": "are not", "can't": "cannot", "couldn't": "could not",
-            "didn't": "did not", "doesn't": "does not", "don't": "do not",
-            "hadn't": "had not", "hasn't": "has not", "haven't": "have not",
-            "he'd": "he would", "he'll": "he will", "he's": "he is",
-            "i'd": "i would", "i'll": "i will", "i'm": "i am",
-            "i've": "i have", "isn't": "is not", "it'd": "it would",
-            "it'll": "it will", "it's": "it is", "let's": "let us",
-            "shouldn't": "should not", "that's": "that is",
-            "there's": "there is", "they'd": "they would",
-            "they'll": "they will", "they're": "they are",
-            "they've": "they have", "we'd": "we would",
-            "we're": "we are", "we've": "we have", "weren't": "were not",
-            "what's": "what is", "where's": "where is",
-            "who's": "who is", "won't": "will not", "wouldn't": "would not",
-            "you'd": "you would", "you'll": "you will",
-            "you're": "you are", "you've": "you have"
-        }
+
     
     def clean_text(self, text: str) -> str:
         """Clean and normalize text"""
